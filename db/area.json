@@ -4,15 +4,15 @@
     "table": [
         {
             "key": "area_x",
-            "type": "number"
+            "type": "integer"
         },
         {
             "key": "area_y",
-            "type": "number"
+            "type": "integer"
         },
         {
             "key": "comment",
-            "type": "string"
+            "type": "text"
         }
     ]
 }
