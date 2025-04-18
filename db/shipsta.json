@@ -1,5 +1,5 @@
 {
-    "dbname": "static",
+    "dbname": "shipsta",
     "description": "船舶静态数据，包括shipid/imono/shipname/mmsi之间的绑定,imono是唯一的，mmsi是可以更换的，shipid是爬取网站的自有唯一标识，不作为本数据库的业务",
     "table": [
         {

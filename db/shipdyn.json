@@ -1,0 +1,58 @@
+{
+    "dbname": "shipsta",
+    "description": "船舶动态数据，包括位置坐标、速度、航向、时间戳等",
+    "table": [
+        {
+            "key": "shipid",
+            "type": "string"
+        },
+        {
+            "key": "lon",
+            "type": "number"
+        },
+        {
+            "key": "lat",
+            "type": "number"
+        },
+        {
+            "key": "speed",
+            "type": "number"
+        },
+        {
+            "key": "course",
+            "type": "number"
+        },
+        {
+            "key": "heading",
+            "type": "number"
+        },
+        {
+            "key": "rot",
+            "type": "number"
+        },
+        {
+            "key": "draught",
+            "type": "string"
+        },
+        {
+            "key": "destination",
+            "type": "string"
+        },
+        {
+            "key": "eta",
+            "type": "number"
+        },
+        {
+            "key": "status",
+            "type": "string"
+        },
+        {
+            "key": "station",
+            "type": "string"
+        },
+        {
+            "key": "timestamp",
+            "type": "number"
+        }
+    ]
+}

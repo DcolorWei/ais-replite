@@ -1,0 +1,18 @@
+{
+    "dbname": "area",
+    "description": "海图区块坐标，用于记录目标海区位置",
+    "table": [
+        {
+            "key": "area_x",
+            "type": "number"
+        },
+        {
+            "key": "area_y",
+            "type": "number"
+        },
+        {
+            "key": "comment",
+            "type": "string"
+        }
+    ]
+}
