@@ -26,6 +26,31 @@ export async function getVesselListByArea(area_x, area_y) {
         args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
     }).catch(e => e)
     const page = await browser.newPage();
+    const url = `${process.env.MARINE_ORIGIN_HOST}/en/ais/home/centerx:${area_x}/centery:${area_y}/zoom:11`;
+    const shipList = [];
+    page.on('response', async (response) => {
+        const request = response.request();
+        const url = request.url();
+        if (url.includes('/getData/get_data_json_4') && url.includes('station')) {
+            const { data } = (await response?.json());
+            const rowsData = data['rows'];
+            shipList.push(...rowsData.map(i => {
+                return {
+                    id: i['SHIP_ID'],
+                    type: i['SHIPTYPE'],
+                    classBFlag: i['DESTINATION'] === 'CLASS B',
+                    elapsed: i['ELAPSED'],
+                }
+            }));
+        }
+    });
+    await page.goto(url).catch(e => e);
+    for (let i = 0; i < 15; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    await browser.close();
+    return shipList;
+}
     const result = {
         static: null,
         position: null,
@@ -50,14 +75,19 @@ export async function getVesselListByArea(area_x, area_y) {
     await page.goto(`${process.env.MARINE_ORIGIN_HOST}/en/ais/details/ships/shipid:${vessel_id}`).catch(e => e);
     for (let i = 0; i < 20; i++) {
         await new Promise(resolve => setTimeout(resolve, 500));
+        // 如果page的title是"Page not found"则说明没有找到该船舶，直接返回
+        const title = await page.title();
+        if (title.includes('Just a moment')) break;
         if (Object.values(result).every(i => i)) break;
     }
-    // await browser.close();
+    try {
+        await page.close();
+    } catch (e) { e }
+    // 等待页面关闭的缓存被清除
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    if (Object.values(result).every(i => i)) {
     return result;
+    } else {
+        return null;
+    }
 }
-getVesselListByArea(424, 196).then(vesselIds => {
-    console.log(vesselIds);
-    getVesselByVesselId(vesselIds[1]).then(vessel => {
-        console.log(vessel);
-    })
-});
