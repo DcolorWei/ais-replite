@@ -1,14 +1,10 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { getIps } from './getIps.js';
-
 puppeteer.use(StealthPlugin());
 import dotenv from 'dotenv';
 import fs from 'fs';
 dotenv.config();
 
-const ips = await getIps(1);
 
 export async function getVesselListByArea(area_x, area_y) {
     const ips = [];
@@ -51,6 +47,10 @@ export async function getVesselListByArea(area_x, area_y) {
     await browser.close();
     return shipList;
 }
+
+export async function getVesselByVesselId(browser, vessel_id) {
+    const page = await browser.newPage();
+
     const result = {
         static: null,
         position: null,
@@ -60,16 +60,22 @@ export async function getVesselListByArea(area_x, area_y) {
         const request = response.request();
         const url = request.url();
         if (['/voyage', '/vessels'].every(i => url.includes(i))) {
-            const data = (await response?.json());
-            result.voyage = data;
+            try {
+                const data = (await response?.json());
+                result.voyage = data;
+            } catch (e) { e }
         }
         if (['/position', '/vessels'].every(i => request.url().includes(i))) {
-            const data = (await response?.json());
-            result.position = data;
+            try {
+                const data = (await response?.json());
+                result.position = data;
+            } catch (e) { e }
         }
         if (['/general', '/vessels'].every(i => request.url().includes(i))) {
-            const data = (await response?.json());
-            result.static = data;
+            try {
+                const data = (await response?.json());
+                result.static = data;
+            } catch (e) { e }
         }
     });
     await page.goto(`${process.env.MARINE_ORIGIN_HOST}/en/ais/details/ships/shipid:${vessel_id}`).catch(e => e);
@@ -86,7 +92,7 @@ export async function getVesselListByArea(area_x, area_y) {
     // 等待页面关闭的缓存被清除
     await new Promise(resolve => setTimeout(resolve, 5000));
     if (Object.values(result).every(i => i)) {
-    return result;
+        return result;
     } else {
         return null;
     }
