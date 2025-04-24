@@ -4,24 +4,27 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { getIps } from './getIps.js';
 
 puppeteer.use(StealthPlugin());
+import dotenv from 'dotenv';
+import fs from 'fs';
+dotenv.config();
 
 const ips = await getIps(1);
 
 export async function getVesselListByArea(area_x, area_y) {
-    const url = `${process.env.MARINE_ORIGIN_HOST}/getData/get_data_json_4/z:10/X:${area_x}/Y:${area_y}/station:0`;
-    const { data } = await fetch(url,
-        { agent: new HttpsProxyAgent(`http://${ips[0]}`) }
-    )
-        .then(res => res.json());
-    return data.rows.map(item => item['SHIP_ID']);
-}
+    const ips = [];
+    do {
+        ips.push(...fs.readdirSync("./ips"));
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    } while (!ips.length);
 
-export async function getVesselByVesselId(vessel_id) {
+    const ip = ips.pop();
+    try {
+        fs.unlinkSync(`./ips/${ip}`);
+    } catch (e) { }
     const browser = await puppeteer.launch({
-        executablePath: "D:/chrome-win/chrome.exe", headless: false,
-        args: ["--start-maximized", `--proxy-server=${ips[0]}`,]
-    }).catch(e => e);
-
+        executablePath: "D:/chrome-win/chrome.exe", headless: true,
+        args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
+    }).catch(e => e)
     const page = await browser.newPage();
     const result = {
         static: null,
