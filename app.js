@@ -1,7 +1,50 @@
-const puppeteer = require('puppeteer-extra');
-puppeteer.use(require('puppeteer-extra-plugin-stealth')());
-const sqlite3 = require('sqlite3').verbose();
+import { getVesselListByArea, getVesselByVesselId } from './method/vessel.js';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+puppeteer.use(StealthPlugin());
+import fs from 'fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 (async () => {
- 
+    while (1) {
+        const master = {
+            area: { x: 122.2, y: 29.9 },
+            currentList: [],
+            currentTime: Date.now(),
+        };
+        const shipIds = await getVesselListByArea(master.area.x, master.area.y);
+        shipIds.sort((a, b) => {
+            if (a.elapsed < b.elapsed) return -1;
+            if (a.elapsed > b.elapsed) return 1;
+            return 0;
+        });
+        const filteredShipIds = shipIds.filter(i => Number(i.elapsed) < 3);
+        if (filteredShipIds.length === 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * 15));
+            continue;
+        }
+        const time = Date.now();
+        fs.mkdirSync(`./task/${time}`);
+        filteredShipIds.forEach((i) => {
+            fs.writeFileSync(`./task/${time}/${i.elapsed}_${i.id}.json`, JSON.stringify(i));
+        });
+        while (1) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * 10));
+            const taskDir = './task/';
+            const taskList = fs.readdirSync(taskDir);
+            if (taskList.length === 0) {
+                break;
+            }
+            if (taskList.length > 1) {
+                continue;
+            }
+            const taskFiles = fs.readdirSync(`${taskDir}/${taskList[0]}`);
+            if (taskFiles.length < 70) {
+                break;
+            }
+            console.log(new Date(), 'wait task be cleared...');
+        }
+    }
 })();
