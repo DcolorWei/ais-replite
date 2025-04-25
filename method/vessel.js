@@ -6,21 +6,7 @@ import fs from 'fs';
 dotenv.config();
 
 
-export async function getVesselListByArea(area_x, area_y) {
-    const ips = [];
-    do {
-        ips.push(...fs.readdirSync("./ips"));
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    } while (!ips.length);
-
-    const ip = ips.pop();
-    try {
-        fs.unlinkSync(`./ips/${ip}`);
-    } catch (e) { }
-    const browser = await puppeteer.launch({
-        executablePath: "D:/chrome-win/chrome.exe", headless: true,
-        args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
-    }).catch(e => e)
+export async function getVesselListByArea(browser, area_x, area_y) {
     const page = await browser.newPage();
     const url = `${process.env.MARINE_ORIGIN_HOST}/en/ais/home/centerx:${area_x}/centery:${area_y}/zoom:11`;
     const shipList = [];

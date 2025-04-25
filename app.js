@@ -9,12 +9,30 @@ dotenv.config();
 
 (async () => {
     while (1) {
+        const ips = [];
+        do {
+            ips.push(...fs.readdirSync("./ips"));
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } while (!ips.length);
+
+        const ip = ips.pop();
+        try {
+            fs.unlinkSync(`./ips/${ip}`);
+        } catch (e) { }
+        const browser = await puppeteer.launch({
+            executablePath: "D:/chrome-win/chrome.exe", headless: true,
+            args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
+        }).catch(e => e)
+
         const master = {
             area: { x: 122.2, y: 29.9 },
             currentList: [],
             currentTime: Date.now(),
         };
-        const shipIds = await getVesselListByArea(master.area.x, master.area.y);
+        const shipIds = [];
+        try {
+            shipIds.push(...await getVesselListByArea(browser, master.area.x, master.area.y));
+        } catch (e) { e }
         shipIds.sort((a, b) => {
             if (a.elapsed < b.elapsed) return -1;
             if (a.elapsed > b.elapsed) return 1;
