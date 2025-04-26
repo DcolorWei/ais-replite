@@ -1,63 +1,85 @@
-import fs from 'fs';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
 import { getVesselByVesselId } from './method/vessel.js';
-const taskDir = './task/';
-const recordDir = './record/';
-
-const idx = process.argv[2] || 0;
+import { createConnection } from 'net';
+const port = 3000;
+const host = '127.0.0.1';
 
 while (true) {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const taskTimes = fs.readdirSync(taskDir);
-    if (taskTimes.length === 0) {
-        console.log(new Date(), 'No tasks found');
+
+    const count = await new Promise(async r => {
+        let count = null;
+        const client = createConnection({ port, host }, () => {
+            client.write(JSON.stringify({ action: 'count' }));
+        });
+        client.once('data', (data) => {
+            count = JSON.parse(data).count;
+            client.destroy();
+        });
+        while (count === null) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log(new Date(), 'wait for count...');
+        }
+        r(count);
+    });
+    console.log(new Date(), 'count:', count);
+    if (count < 10) {
+        console.log(new Date(), 'Wait for more task');
         await new Promise(resolve => setTimeout(resolve, 10000));
         continue;
     }
-    const taskFiles = fs.readdirSync(`${taskDir}/${taskTimes[0]}`);
-    if (taskFiles.length === 0) {
-        fs.rmdirSync(`${taskDir}/${taskTimes[0]}`, { recursive: true });
-        continue;
-    }
 
-    const ips = [];
-    do {
-        ips.push(...fs.readdirSync("./ips"));
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    } while (!ips.length);
-
-    const ip = ips.pop();
-    try {
-        fs.unlinkSync(`./ips/${ip}`);
-    } catch (e) { }
+    const ip = await new Promise(async r => {
+        let ip = null;
+        const client = createConnection({ port, host }, () => {
+            client.write(JSON.stringify({ action: 'getIp' }));
+        });
+        client.once('data', (data) => {
+            ip = JSON.parse(data).ip;
+            client.destroy();
+        });
+        while (ip === null) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log(new Date(), 'wait for ip...');
+        }
+        r(ip);
+    });
     console.log(`${ip}`);
+    const taskIds = [];
+    for (let i = 0; i < 4; i++) {
+        const id = await new Promise(async r => {
+            let task = null;
+            const client = createConnection({ port, host }, () => {
+                client.write(JSON.stringify({ action: 'getTask' }));
+            });
+            client.once('data', (data) => {
+                task = JSON.parse(data).id;
+                client.destroy();
+            });
+            while (task === null) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                console.log(new Date(), 'wait for task...');
+            }
+            r(task);
+        });
+        taskIds.push(id);
+    }
+    console.log('taskIds:', taskIds);
+
     const browser = await puppeteer.launch({
         executablePath: "D:/chrome-win/chrome.exe", headless: true,
         args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
     });
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
-    console.log(new Date(), taskFiles.length);
     await Promise.all(
-        taskFiles.slice(0, 4).map(async (file, index) => {
-            try {
-                fs.unlinkSync(`${taskDir}/${taskTimes[0]}/${file}`);
-                // 成功删除代表抢到任务，继续执行
-                const [elapsed, id] = file.replace(".json", "").split('_');
-                const info = await getVesselByVesselId(browser, id);
-                if (!info) return
-                const recordPath = `${recordDir}/${id}.json`;
-                if (!fs.existsSync(recordPath)) {
-                    fs.writeFileSync(recordPath, JSON.stringify([info]));
-                    return;
-                }
-                const fileData = JSON.parse(fs.readFileSync(recordPath, 'utf-8').toString());
-                fileData.push(info);
-                try {
-                    fs.writeFileSync(recordPath, JSON.stringify(fileData));
-                } catch (e) { e }
-            } catch (e) { e }
+        taskIds.map(async (id, index) => {
+            const record = await getVesselByVesselId(browser, id);
+            const client = createConnection({ port, host }, async () => {
+                client.write(JSON.stringify({ action: 'addRecord', data: { record } }));
+            });
         })
     );
     browser.close();
