@@ -47,25 +47,25 @@ while (true) {
         r(ip);
     });
     console.log(`${ip}`);
-    const taskIds = [];
-    for (let i = 0; i < 4; i++) {
-        const id = await new Promise(async r => {
-            let task = null;
-            const client = createConnection({ port, host }, () => {
-                client.write(JSON.stringify({ action: 'getTask' }));
+    const taskIds = await Promise.all(
+        [0, 0, 0, 0].map(async () => {
+            await new Promise(async r => {
+                let task = null;
+                const client = createConnection({ port, host }, () => {
+                    client.write(JSON.stringify({ action: 'getTask' }));
+                });
+                client.once('data', (data) => {
+                    task = JSON.parse(data).id;
+                    client.destroy();
+                });
+                while (task === null) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    console.log(new Date(), 'wait for task...');
+                }
+                r(task);
             });
-            client.once('data', (data) => {
-                task = JSON.parse(data).id;
-                client.destroy();
-            });
-            while (task === null) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                console.log(new Date(), 'wait for task...');
-            }
-            r(task);
-        });
-        taskIds.push(id);
-    }
+        })
+    );
     console.log('taskIds:', taskIds);
 
     const browser = await puppeteer.launch({
