@@ -21,10 +21,7 @@ dotenv.config();
                     count = JSON.parse(data).count;
                     client.destroy();
                 });
-                while (count === null) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    console.log(new Date(), 'wait for count...');
-                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 r(count);
             });
             console.log(new Date(), 'count:', count);
@@ -44,12 +41,12 @@ dotenv.config();
                     client.destroy();
                 });
                 client.once('error', () => client.destroy());
-                while (ip === null) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    console.log(new Date(), 'wait for ip...');
-                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 r(ip);
             })
+            if (ip === null) {
+                continue;
+            }
             console.log(`${ip}`);
             const browser = await puppeteer.launch({
                 executablePath: "D:/chrome-win/chrome.exe", headless: true,

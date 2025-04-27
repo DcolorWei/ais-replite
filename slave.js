@@ -18,10 +18,7 @@ while (true) {
             count = JSON.parse(data).count;
             client.destroy();
         });
-        while (count === null) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log(new Date(), 'wait for count...');
-        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
         r(count);
     });
     console.log(new Date(), 'count:', count);
@@ -42,16 +39,16 @@ while (true) {
         });
         client.on('error', () => client.destroy());
 
-        while (ip === null) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log(new Date(), 'wait for ip...');
-        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
         r(ip);
     });
+    if (ip === null) {
+        continue;
+    }
     console.log(`${ip}`);
     const taskIds = await Promise.all(
         [0, 0, 0, 0].map(async () => {
-            await new Promise(async r => {
+            return await new Promise(async r => {
                 let task = null;
                 const client = createConnection({ port, host }, () => {
                     client.write(JSON.stringify({ action: 'getTask' }));
@@ -61,11 +58,7 @@ while (true) {
                     client.destroy();
                 });
                 client.on('error', () => client.destroy());
-
-                while (task === null) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    console.log(new Date(), 'wait for task...');
-                }
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 r(task);
             });
         })
@@ -79,7 +72,7 @@ while (true) {
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     await Promise.all(
-        taskIds.map(async (id, index) => {
+        taskIds.filter(i => i).map(async (id, index) => {
             const record = await getVesselByVesselId(browser, id);
             const client = createConnection({ port, host }, async () => {
                 client.write(JSON.stringify({ action: 'addRecord', data: { record } }));
