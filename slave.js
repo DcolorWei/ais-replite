@@ -18,6 +18,8 @@ while (true) {
             count = JSON.parse(data).count;
             client.destroy();
         });
+        client.once('error', () => client.destroy());
+
         await new Promise(resolve => setTimeout(resolve, 1000));
         r(count);
     });

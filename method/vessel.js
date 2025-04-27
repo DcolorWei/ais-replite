@@ -7,7 +7,7 @@ dotenv.config();
 
 
 export async function getVesselListByArea(browser, area_x, area_y) {
-    const page = await browser.newPage();
+    const page = await browser.newPage().catch(e => e);;
     const url = `${process.env.MARINE_ORIGIN_HOST}/en/ais/home/centerx:${area_x}/centery:${area_y}/zoom:11`;
     const shipList = [];
     page.on('response', async (response) => {
@@ -30,12 +30,12 @@ export async function getVesselListByArea(browser, area_x, area_y) {
     for (let i = 0; i < 15; i++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    await browser.close();
+    await browser.close().catch(e => e);
     return shipList;
 }
 
 export async function getVesselByVesselId(browser, vessel_id) {
-    const page = await browser.newPage();
+    const page = await browser.newPage().catch(e => e);;
 
     const result = {
         static: null,
