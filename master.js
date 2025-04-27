@@ -43,6 +43,7 @@ dotenv.config();
                     ip = JSON.parse(data).ip;
                     client.destroy();
                 });
+                client.once('error', () => client.destroy());
                 while (ip === null) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     console.log(new Date(), 'wait for ip...');
@@ -79,6 +80,7 @@ dotenv.config();
                 const client = createConnection({ port, host }, () => {
                     client.write(JSON.stringify({ action: 'addTask', data: { id: i.id, time: time } }));
                 });
+                client.on('error', () => client.destroy());
             });
         } catch (e) { e }
     }

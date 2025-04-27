@@ -40,6 +40,8 @@ while (true) {
             ip = JSON.parse(data).ip;
             client.destroy();
         });
+        client.on('error', () => client.destroy());
+
         while (ip === null) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             console.log(new Date(), 'wait for ip...');
@@ -58,6 +60,8 @@ while (true) {
                     task = JSON.parse(data).id;
                     client.destroy();
                 });
+                client.on('error', () => client.destroy());
+
                 while (task === null) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     console.log(new Date(), 'wait for task...');
@@ -80,6 +84,7 @@ while (true) {
             const client = createConnection({ port, host }, async () => {
                 client.write(JSON.stringify({ action: 'addRecord', data: { record } }));
             });
+            client.on('error', () => client.destroy());
         })
     );
     browser.close();
