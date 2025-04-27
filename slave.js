@@ -76,7 +76,12 @@ while (true) {
     const browser = await puppeteer.launch({
         executablePath: "D:/chrome-win/chrome.exe", headless: true,
         args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
-    });
+    }).catch(e => null);
+    if (browser === null) {
+        console.log(new Date(), 'Browser launch failed');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+    }
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     await Promise.all(
@@ -88,5 +93,5 @@ while (true) {
             client.on('error', () => client.destroy());
         })
     );
-    browser.close();
+    await browser.close().catch(e => e);;
 }

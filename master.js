@@ -55,7 +55,13 @@ const port = env.TCP_PORT || 3000;
         const browser = await puppeteer.launch({
             executablePath: env.CHROME_PATH, headless: true,
             args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
-        }).catch(e => e)
+        }).catch(e => null);
+
+        if (browser === null) {
+            console.log('Browser launch failed');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+        }
 
         const shipIds = [];
         try {

@@ -14,8 +14,6 @@ export async function getIps(limit) {
                 }
                 resolve(data.split("<br />"));
             })
-            .catch(e => {
-                reject(e);
-            })
+            .catch(e => resolve([]));
     })
 }
