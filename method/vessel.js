@@ -2,13 +2,13 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
 import dotenv from 'dotenv';
-import fs from 'fs';
 dotenv.config();
 
+const env = process.env;
 
 export async function getVesselListByArea(browser, area_x, area_y) {
     const page = await browser.newPage().catch(e => e);;
-    const url = `${process.env.MARINE_ORIGIN_HOST}/en/ais/home/centerx:${area_x}/centery:${area_y}/zoom:11`;
+    const url = `${env.MARINE_ORIGIN_HOST}/en/ais/home/centerx:${area_x}/centery:${area_y}/zoom:11`;
     const shipList = [];
     page.on('response', async (response) => {
         const request = response.request();
@@ -64,7 +64,7 @@ export async function getVesselByVesselId(browser, vessel_id) {
             } catch (e) { e }
         }
     });
-    await page.goto(`${process.env.MARINE_ORIGIN_HOST}/en/ais/details/ships/shipid:${vessel_id}`).catch(e => e);
+    await page.goto(`${env.MARINE_ORIGIN_HOST}/en/ais/details/ships/shipid:${vessel_id}`).catch(e => e);
     for (let i = 0; i < 20; i++) {
         await new Promise(resolve => setTimeout(resolve, 500));
         // 如果page的title是"Page not found"则说明没有找到该船舶，直接返回

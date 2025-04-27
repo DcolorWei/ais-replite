@@ -1,6 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
+const env = process.env;
 export async function getIps(limit) {
-    const url = env.url;
-    const token = env.token;
+    const url = env.PROXY_URL;
+    const token = env.PROXY_TOKEN;
     return new Promise((resolve, reject) => {
         fetch(`${url}?token=${token}&limit=${limit}&type=0&time=&split=1&split_text=`)
             .then(res => res.text())

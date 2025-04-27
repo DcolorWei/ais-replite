@@ -2,12 +2,15 @@ import { getVesselListByArea, getVesselByVesselId } from './method/vessel.js';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
-import dotenv from 'dotenv';
 import { createConnection } from 'net';
-const port = 3000;
-const host = '127.0.0.1';
+
+import dotenv from 'dotenv';
 
 dotenv.config();
+
+const env = process.env;
+const host = env.TCP_HOST || "127.0.0.1";
+const port = env.TCP_PORT || 3000;
 
 (async () => {
     while (1) {
@@ -50,18 +53,13 @@ dotenv.config();
         }
         console.log(`${ip}`);
         const browser = await puppeteer.launch({
-            executablePath: "D:/chrome-win/chrome.exe", headless: true,
+            executablePath: env.CHROME_PATH, headless: true,
             args: ["--start-maximized", `--proxy-server=${ip.replace("_", ':')}`],
         }).catch(e => e)
 
-        const master = {
-            area: { x: 122.2, y: 29.9 },
-            currentList: [],
-            currentTime: Date.now(),
-        };
         const shipIds = [];
         try {
-            shipIds.push(...await getVesselListByArea(browser, master.area.x, master.area.y));
+            shipIds.push(...await getVesselListByArea(browser, env.LON, env.LAT));
         } catch (e) { e }
         shipIds.sort((a, b) => {
             if (a.elapsed < b.elapsed) return -1;

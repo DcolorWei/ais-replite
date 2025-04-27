@@ -3,8 +3,14 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
 import { getVesselByVesselId } from './method/vessel.js';
 import { createConnection } from 'net';
-const port = 3000;
-const host = '127.0.0.1';
+
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const env = process.env;
+const host = env.TCP_HOST || "127.0.0.1";
+const port = env.TCP_PORT || 3000;
 
 while (true) {
     await new Promise(resolve => setTimeout(resolve, 1000));
