@@ -1,6 +1,3 @@
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-puppeteer.use(StealthPlugin());
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -18,20 +15,28 @@ export async function getVesselListByArea(browser, area_x, area_y) {
         const request = response.request();
         const url = request.url();
         if (url.includes('/getData/get_data_json_4') && url.includes('station')) {
-            const { data } = (await response?.json());
-            const rowsData = data['rows'];
-            shipList.push(...rowsData.map(i => {
-                return {
-                    id: i['SHIP_ID'],
-                    type: i['SHIPTYPE'],
-                    classBFlag: i['DESTINATION'] === 'CLASS B',
-                    elapsed: i['ELAPSED'],
-                }
-            }));
+            console.log(response.status())
+            if (response.status() == 403) {
+                await browser.close();
+                return [];
+            }
+            try {
+                const { data } = (await response?.json());
+                const rowsData = data['rows'];
+                shipList.push(...rowsData.map(i => {
+                    return {
+                        id: i['SHIP_ID'],
+                        type: i['SHIPTYPE'],
+                        classBFlag: i['DESTINATION'] === 'CLASS B',
+                        elapsed: i['ELAPSED'],
+                    }
+                }));
+            } catch { }
         }
     });
-    await page.goto(url).catch(e => e);
-    for (let i = 0; i < 15; i++) {
+    await page.goto(env.MARINE_ORIGIN_HOST).catch(e => e);
+    await page.goto(url).catch(e => e)
+    for (let i = 0; i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
     await browser.close().catch(e => e);
