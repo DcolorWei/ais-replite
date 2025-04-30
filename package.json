@@ -10,8 +10,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "env": "^0.0.2",
+    "express": "^5.1.0",
     "https-proxy-agent": "^7.0.6",
     "pg": "^8.14.1",
     "pg-format": "^1.0.4",
